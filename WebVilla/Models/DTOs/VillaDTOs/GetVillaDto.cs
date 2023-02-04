@@ -1,18 +1,18 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace WebVilla.Models.DTOs
+namespace WebVilla.Models.DTOs.VillaDTOs
 {
-    public class UpdateVillaDto
+    public class GetVillaDto
     {
         public int Id { get; set; }
-        [Required]
         public string Name { get; set; }
         public string Details { get; set; }
         public double Rate { get; set; }
         public int Sqft { get; set; }
         public int Occupancy { get; set; }
-        public IFormFile ImageUrl { get; set; }
+        public string ImageUrl { get; set; }
         public string Amenity { get; set; }
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
     }
 }

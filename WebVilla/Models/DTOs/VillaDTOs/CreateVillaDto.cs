@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace WebVilla.Models.DTOs
+namespace WebVilla.Models.DTOs.VillaDTOs
 {
     public class CreateVillaDto
     {
@@ -10,8 +10,8 @@ namespace WebVilla.Models.DTOs
         public double Rate { get; set; }
         public int Sqft { get; set; }
         public int Occupancy { get; set; }
-        public IFormFile ImageUrl { get; set; }
+        public string ImageUrl { get; set; }
+        /* public IFormFile ImageUrl { get; set; }*/
         public string Amenity { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

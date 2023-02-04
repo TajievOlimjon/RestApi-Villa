@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using WebVilla.Models;
 using WebVilla.Models.DTOs.VillaDTOs;
+using WebVilla.Models.DTOs.VillaNumberDtos;
 using WebVilla.Repozitories.RepozitoryServices;
 using WebVilla.Responses;
 
@@ -10,50 +11,36 @@ namespace WebVilla.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class VillaController : ControllerBase
+    public class VillaNumberController : ControllerBase
     {
         protected APIResponse _response;
-        private  readonly IVillaRepozitory  _villaRepozitory;
+        private  readonly IVillaNumberRepozitory  _villaNumberRepozitory;
+        private readonly IVillaRepozitory _villaRepozitory;
         private readonly IMapper _mapper;
-        public VillaController(IVillaRepozitory  villaRepozitory,IMapper mapper)
+        public VillaNumberController(IVillaNumberRepozitory villaNumberRepozitory,IVillaRepozitory villaRepozitory,IMapper mapper)
         {
-            _villaRepozitory=villaRepozitory;
+            _villaNumberRepozitory = villaNumberRepozitory;
+            _villaRepozitory = villaRepozitory;
             _mapper = mapper;
             this._response = new();
         }
 
-        [HttpGet("GetVillas")]
+        [HttpGet("GetVillaNumbers")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<APIResponse>> GetVillas()
+        public async Task<ActionResult<APIResponse>> GetVillaNumbers()
         {
             try
             { 
-                var villas = await _villaRepozitory.GetAllAsync();
+                var villas = await _villaNumberRepozitory.GetAllAsync();
                 
                 if (villas.Count is  0)
                 {
-                    _response.Result= new List<GetAllVillaDto>();
-                    _response.StatusCode = (int)HttpStatusCode.NoContent;
-
-                    return BadRequest(_response);
+                    _response.Result= _mapper.Map<List<GetAllVillaNumberDto>>(new List<VillaNumber>());
+                    return Ok(_response);
                 }
-                
-                _response.Result = _mapper.Map<List<GetAllVillaDto>>(villas);
-                _response.StatusCode = (int)HttpStatusCode.OK;
-                /*_response.Result= villas.Select(x=>new GetAllVillaDto
-                {
-                    Id=x.Id,
-                    Name=x.Name,
-                    Details=x.Details,
-                    Sqft=x.Sqft,
-                    Amenity=x.Amenity,
-                    ImageUrl=x.ImageUrl,
-                    Occupancy=x.Occupancy,
-                    Rate=x.Rate,
-                    CreatedAt=x.CreatedAt,
-                    UpdatedAt=x.UpdatedAt
-                }).ToList();*/
+                _response.Result= _mapper.Map<List<GetAllVillaNumberDto>>(villas);
+                _response.StatusCode =(int)HttpStatusCode.OK;
                 return Ok(_response);
             }
             catch (Exception ex)
@@ -63,11 +50,11 @@ namespace WebVilla.Controllers
             }
             return _response;
         }
-        [HttpPost("AddVilla")]
+        [HttpPost("AddVillaNumber")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(statusCode: 400)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<APIResponse>> AddVilla([FromBody] CreateVillaDto villaDto)
+        public async Task<ActionResult<APIResponse>> AddVillaNumber([FromBody] CreateVillaNumberDto villaNumberDto)
         {
             try
             { 
@@ -78,21 +65,28 @@ namespace WebVilla.Controllers
                  }
 
                 // var result=await
-                 if (await _villaRepozitory.GetAsync(x => x.Name.ToLower().Equals(villaDto.Name.ToLower())) is not null)
+                 if (await _villaNumberRepozitory.GetAsync(x => x.VillaNo.Equals(villaNumberDto.VillaNo)) is not null)
                  {
-                     ModelState.AddModelError("CustomError", $"This is {villaDto.Name} villa already exists!");
+                     ModelState.AddModelError("CustomError", $"This is {villaNumberDto.VillaNo} villa number already exists!");
                
                      return BadRequest(ModelState);
                  }
+
+                 if(await _villaRepozitory.GetAsync(x=>x.Id.Equals(villaNumberDto.VillaId)) is null)
+                 {
+                    ModelState.AddModelError("CustomError","villa id is invalid");
+
+                    return BadRequest(ModelState);
+                 }
                
-                 var villa = _mapper.Map<Villa>(villaDto);
-                  villa.CreatedAt = DateTime.UtcNow;
-                 await _villaRepozitory.CreateAsync(villa);
+                 var villaNumber = _mapper.Map<VillaNumber>(villaNumberDto);
+                 villaNumber.CreatedAt = DateTime.UtcNow;
+                 await _villaNumberRepozitory.CreateAsync(villaNumber);
                
-                 _response.Result = _mapper.Map<CreateVillaDto>(villa);
+                 _response.Result = _mapper.Map<CreateVillaNumberDto>(villaNumber);
                  _response.StatusCode = (int)HttpStatusCode.Created;
                
-                 return  CreatedAtRoute("GetVillaById", new { Id=villa.Id },_response);
+                 return  CreatedAtRoute("GetVillaNumberById", new { villaNo= villaNumber.VillaNo},_response);
             }
             catch (Exception ex)
             {
@@ -102,30 +96,30 @@ namespace WebVilla.Controllers
             return _response;
         }
   
-        [HttpGet("{id:int}",Name ="GetVillaById")]
+        [HttpGet("{villaNo:int}", Name ="GetVillaNumberById")]
         /*[Route("GetVillaById")]*/
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<APIResponse>> GetVilla(int id)
+        public async Task<ActionResult<APIResponse>> GetVillaNumberById(int villaNo)
         {
             try 
             {
-                 if(id is 0)
+                 if(villaNo is 0)
                  {
                     _response.StatusCode = (int)HttpStatusCode.BadRequest;
                      return BadRequest(_response);
                  }
                  
 
-                 var item=await _villaRepozitory.GetAsync(i=>i.Id==id);
+                 var item=await _villaNumberRepozitory.GetAsync(i=>i.VillaNo== villaNo);
 
                  if(item is null)
                  {
-                     ModelState.AddModelError(string.Empty,$"Not found!, no data in server owned by id:{id}");
+                     ModelState.AddModelError(string.Empty,$"Not found!, no data in server owned by nomer:{villaNo}");
                      return NotFound(ModelState);
                  }
-                 _response.Result = _mapper.Map<GetVillaDto>(item);
+                 _response.Result = _mapper.Map<GetVillaNumberDto>(item);
                  _response.StatusCode = (int)HttpStatusCode.OK;
                  return Ok(_response);
             }
@@ -136,27 +130,28 @@ namespace WebVilla.Controllers
             }
             return _response;
         }
-        [HttpPut("UpdateVilla")]
+        [HttpPut("UpdateVillaNumber")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<APIResponse>> UpdateVilla(UpdateVillaDto updateVillaDto)
+        public async Task<ActionResult<APIResponse>> UpdateVillaNumber(UpdateVillaNumberDto updateVillaNumberDto)
         {
             try
             { 
-                 if(updateVillaDto.Id is 0)
+                 if(updateVillaNumberDto.VillaNo is 0)
                  {
                     _response.StatusCode = (int)HttpStatusCode.BadRequest;
                     return BadRequest(_response);
                  }
-                 var villa = await _villaRepozitory.GetAsync(x => x.Id.Equals(updateVillaDto.Id));
-                if(villa is null)
+                var model = await _villaRepozitory.GetAsync(x => x.Id.Equals(updateVillaNumberDto.VillaId));
+                if (model is null)
                 {
-                    _response.StatusCode = (int)HttpStatusCode.NotFound;
-                    return BadRequest(_response);
+                    ModelState.AddModelError("CustomError", "villa id is invalid");
+
+                    return BadRequest(ModelState);
                 }
-                 var model = _mapper.Map<Villa>(updateVillaDto);
-                 model.CreatedAt = villa.CreatedAt;
-                 await _villaRepozitory.UpdateAsync(model);
+                 var villaNumber = _mapper.Map<VillaNumber>(updateVillaNumberDto);
+                 villaNumber.CreatedAt = model.CreatedAt;
+                 await _villaNumberRepozitory.UpdateAsync(villaNumber);
                  _response.StatusCode = (int)HttpStatusCode.OK;
                  _response.IsSuccess = true;
                  return Ok(_response);
@@ -170,27 +165,27 @@ namespace WebVilla.Controllers
 
         }
 
-        [HttpDelete("DeleteVilla")]
+        [HttpDelete("DeleteVillaNumber")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<APIResponse>> DeleteVilla(int id)
+        public async Task<ActionResult<APIResponse>> DeleteVillaNumber(int villaNo)
         {
             try
             {
-                if (id is 0)
+                if (villaNo is 0)
                 {
                     _response.StatusCode = (int)HttpStatusCode.BadRequest;
                     return BadRequest(_response);
                 }
-                var villa = await _villaRepozitory.GetAsync(x => x.Id.Equals(id));
+                var villa = await _villaNumberRepozitory.GetAsync(x => x.VillaNo.Equals(villaNo));
 
                 if (villa is null)
                 {
-                    ModelState.AddModelError(string.Empty, $"Not found!, no data in server owned by id:{id}");
+                    ModelState.AddModelError(string.Empty, $"Not found!, no data in server owned by nomer:{villaNo}");
                     return NotFound(ModelState);
                 }
-                await _villaRepozitory.RemoveAsync(villa);
+                await _villaNumberRepozitory.RemoveAsync(villa);
                 _response.StatusCode = (int)HttpStatusCode.OK;
                 _response.IsSuccess = true;
                 return Ok(_response);

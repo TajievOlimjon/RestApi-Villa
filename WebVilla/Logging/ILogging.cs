@@ -2,6 +2,7 @@
 {
     public interface ILogging
     {
-        void  Log(string message,string type);
+       public void  LogInfo(string message);
+       public void  LogError(string message);
     }
 }

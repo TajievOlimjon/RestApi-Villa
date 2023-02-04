@@ -13,7 +13,7 @@ namespace WebVilla.Models
         public int Occupancy { get; set; }
         public string ImageUrl { get; set; }
         public string Amenity { get; set; }
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
     }
 }
