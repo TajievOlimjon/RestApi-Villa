@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using WebVilla.AuthModels;
 using WebVilla.Models;
 
 namespace WebVilla.Data
@@ -12,6 +13,7 @@ namespace WebVilla.Data
         }
         public DbSet<Villa> Villas { get; set; }
         public DbSet<VillaNumber> VillaNumbers { get; set; }
+        public DbSet<User> Users  { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

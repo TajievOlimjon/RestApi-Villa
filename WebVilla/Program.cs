@@ -7,10 +7,10 @@ using WebVilla.MapModels.VillaMappers;
 using WebVilla.Repozitories.RepozitoryServices;
 
 var builder = WebApplication.CreateBuilder(args);
-
+// Add 
 string connection = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationContext>(opt => opt.UseNpgsql(connection));
-// Add services to the container.
+// Add log configure.
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel
     .Debug()
@@ -18,19 +18,23 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
-
+// Add 
 builder.Services.AddControllers(options =>
 {
     options.ReturnHttpNotAcceptable = false;
     options.RespectBrowserAcceptHeader = true;
 }).AddNewtonsoftJson().AddXmlDataContractSerializerFormatters();//.AddXmlSerializerFormatters();
 
-// Add service to the container
+// Add services to the container
 
 builder.Services.AddScoped<IVillaRepozitory, VillaRepozitory>();
 builder.Services.AddScoped<IVillaNumberRepozitory, VillaNumberRepozitory>();
+builder.Services.AddScoped<IUserRepozitory, UserRepozitory>();
+// Add log services to the container
 
 builder.Services.AddSingleton<ILogging,Logging>();
+// Add automapper services to the container
+
 builder.Services.AddAutoMapper(typeof(MapperDto));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
