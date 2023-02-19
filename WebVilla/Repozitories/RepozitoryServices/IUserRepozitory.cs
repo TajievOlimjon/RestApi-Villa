@@ -7,6 +7,6 @@ namespace WebVilla.Repozitories.RepozitoryServices
     {
         Task<bool> IsUniqueUser(string userName);
         Task<LoginResponseDto> Login(LoginRequestDto loginRequestDto);
-        Task<User> Register(RegistrationRequestDto registrationRequestDto);
+        Task<RegistrationResponseDto> Register(RegistrationRequestDto registrationRequestDto);
     }
 }

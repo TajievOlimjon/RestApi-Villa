@@ -5,11 +5,12 @@ using WebVilla.AuthModels.AuthDTOs;
 using WebVilla.Repozitories.RepozitoryServices;
 using WebVilla.Responses;
 
-namespace WebVilla.Controllers.v1
+namespace WebVilla.Controllers
 {
     [Route("api/v{version:apiVersion}[controller]")]
     [ApiController]
     [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     public class UsersController : ControllerBase
     {
         private readonly IUserRepozitory _userRepozitory;

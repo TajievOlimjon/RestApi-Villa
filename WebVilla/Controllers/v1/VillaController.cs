@@ -11,7 +11,7 @@ using WebVilla.Responses;
 
 namespace WebVilla.Controllers.v1
 {
-    [Route("api/v{version:apiVersion}[controller]")]
+    [Route("api/v{version:apiVersion}/Villa")]
     [ApiController]
     [ApiVersion("1.0")]
     public class VillaController : ControllerBase

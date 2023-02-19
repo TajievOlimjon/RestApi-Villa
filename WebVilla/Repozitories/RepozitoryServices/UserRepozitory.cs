@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -6,22 +8,26 @@ using System.Text;
 using WebVilla.AuthModels;
 using WebVilla.AuthModels.AuthDTOs;
 using WebVilla.Data;
-using WebVilla.Repozitories.Repozitory;
 
 namespace WebVilla.Repozitories.RepozitoryServices
 {
     public class UserRepozitory : IUserRepozitory
     {
         private readonly ApplicationContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IMapper _mapper;
         private string secretKey;
-        public UserRepozitory(ApplicationContext context,IConfiguration configuration)
+        public UserRepozitory(ApplicationContext context,IConfiguration configuration,
+            UserManager<ApplicationUser> userManager,IMapper mapper)
         {
+            _userManager = userManager;
             _context = context;
             secretKey = configuration.GetSection("SecretKey:Key").Value;
+            _mapper = mapper;
         }
         public async Task<bool> IsUniqueUser(string userName)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x=>x.UserName.ToLower().Equals(userName.ToLower()));
+            var user = await _context.ApplicationUsers.FirstOrDefaultAsync(x=>x.UserName.ToLower().Equals(userName.ToLower()));
             if(user is null)
             {
                 return true;
@@ -31,8 +37,9 @@ namespace WebVilla.Repozitories.RepozitoryServices
 
         public async Task<LoginResponseDto> Login(LoginRequestDto loginRequestDto)
         {
-            var user= await _context.Users.FirstOrDefaultAsync(x => x.UserName.ToLower().Equals(loginRequestDto.UserName.ToLower()));
-            if(user is null)
+            var user= await _context.ApplicationUsers.FirstOrDefaultAsync(x => x.UserName.ToLower().Equals(loginRequestDto.UserName.ToLower()));
+            var resultCheckPassword = await _userManager.CheckPasswordAsync(user, loginRequestDto.Password);
+            if(user is null || resultCheckPassword is false)
             {
                 return new LoginResponseDto
                 {
@@ -40,6 +47,7 @@ namespace WebVilla.Repozitories.RepozitoryServices
                     Token = "Not token"
                 };
             }
+            var userRoles = await _userManager.GetRolesAsync(user);
             var jwtTokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes(secretKey);
 
@@ -49,7 +57,7 @@ namespace WebVilla.Repozitories.RepozitoryServices
                 {
                     new Claim(ClaimTypes.NameIdentifier,user.Id.ToString()),
                     new Claim(ClaimTypes.Name,user.UserName),
-                    new Claim(ClaimTypes.Role,user.Role)
+                    new Claim(ClaimTypes.Role,userRoles.First())
                 }),
                 Expires=DateTime.UtcNow.AddDays(1),
                 SigningCredentials=new SigningCredentials(new SymmetricSecurityKey(key),SecurityAlgorithms.HmacSha256Signature)
@@ -60,28 +68,40 @@ namespace WebVilla.Repozitories.RepozitoryServices
 
             var response = new LoginResponseDto
             {
-                User=user,
+                User=_mapper.Map<UserDto>(user),
+                Role = userRoles.First(),
                 Token = writeToken
             };
             return response;
         }
 
-        public async Task<User> Register(RegistrationRequestDto registrationRequestDto)
+        public async Task<RegistrationResponseDto> Register(RegistrationRequestDto registrationRequestDto)
         {
-            var user = new User
+            var user = new ApplicationUser
             {
+                FirstName = registrationRequestDto.FirstName,
+                LastName = registrationRequestDto.LastName,
+                Email = registrationRequestDto.Email,
+                NormalizedEmail = registrationRequestDto.Email.ToUpper(),
                 UserName = registrationRequestDto.UserName,
-                Name = registrationRequestDto.Name,
-                Password = registrationRequestDto.Password,
-                Role = registrationRequestDto.Role
+                NormalizedUserName = registrationRequestDto.UserName.ToUpper()
             };
 
-            await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
+           var result= await _userManager.CreateAsync(user,registrationRequestDto.Password);
 
-            user.Password = "Я думаю вам не нужно видеть пароль";
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(user,"Admin");
 
-            return user;
+                var response = new RegistrationResponseDto
+                {
+                    FullName = string.Concat(user.FirstName + " " + user.LastName),
+                    UserName = user.UserName,
+                    Email = user.Email
+                };
+                return response;
+            }
+            return null;
         }
     }
 }

@@ -7,68 +7,58 @@ namespace Web.Services
 {
     public class VillaService :BaseService, IVillaService
     {
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IHttpClientFactory _clientFactory;
         public string _villaUrl;
-        public VillaService(IHttpClientFactory httpClientFactory, IConfiguration configuration) : base(httpClientFactory)
+        public VillaService(IHttpClientFactory clientFactory, IConfiguration configuration) : base(clientFactory)
         {
-            _httpClientFactory = httpClientFactory;
-            _villaUrl = configuration.GetValue<string>("ServiceUrls:VillaApi");
+            _clientFactory =clientFactory;
+            _villaUrl = configuration.GetSection("ServiceUrls:WebVilla").Value;
         }
         public async Task<T> CreateAsync<T>(CreateVillaDto villaCreatedDto)
         {
-            var apiRequest =await SendAsync<T>( new APIRequest
+            return await SendAsync<T>(new APIRequest()
             {
                 ApiType=ApiType.POST,
                 Data=villaCreatedDto,
-                Url=_villaUrl+ "/api/Villa"
+                Url=_villaUrl+ "/api/v1/villa"
             });
-
-            return apiRequest;
         }
 
         public async Task<T> DeleteAsync<T>(int id)
         {
-            var apiRequest = await SendAsync<T>(new APIRequest
+            return await SendAsync<T>(new APIRequest
             {
                 ApiType = ApiType.DELETE,
-                Url = _villaUrl + "/api/Villa/"+id
+                Url = _villaUrl + "/api/v1/Villa/"+id
             });
-
-            return apiRequest;
         }
 
         public async Task<T> GetAllAsync<T>()
         {
-            var apiRequest = await SendAsync<T>(new APIRequest
+            return await SendAsync<T>(new APIRequest
             {
                 ApiType = ApiType.GET,
-                Url = _villaUrl + "/api/Villa"
+                Url = _villaUrl + "/api/v1/Villa/GetVillas"
             });
-
-            return apiRequest;
         }
 
         public async Task<T> GetAsync<T>(int id)
         {
-            var apiRequest = await SendAsync<T>(new APIRequest
+            return await SendAsync<T>(new APIRequest
             {
                 ApiType = ApiType.GET,
-                Url = _villaUrl + "/api/Villa/" + id
+                Url = _villaUrl + "/api/v1/villa/" + id
             });
-
-            return apiRequest;
         }
 
         public async Task<T> UpdateAsync<T>(UpdateVillaDto updateVillaDto)
         {
-            var apiRequest = await SendAsync<T>(new APIRequest
+            return await SendAsync<T>(new APIRequest
             {
                 ApiType = ApiType.PUT,
                 Data = updateVillaDto,
-                Url = _villaUrl + "/api/Villa"
+                Url = _villaUrl + "/api/v1/villa"
             });
-
-            return apiRequest;
         }
     }
 }

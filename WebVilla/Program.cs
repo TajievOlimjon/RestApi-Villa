@@ -15,8 +15,14 @@ builder.Services.AddDbContext<ApplicationContext>(options => {
     options.UseNpgsql(connection);
  });
 //Add auth configure
-builder.Services.AddIdentity<ApplicationUser,IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationContext>();
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(config =>
+{
+    config.Password.RequiredLength = 4;
+    config.Password.RequireDigit = false;
+    config.Password.RequireLowercase = false;
+    config.Password.RequireNonAlphanumeric = false;
+    config.Password.RequireUppercase = false;
+}).AddEntityFrameworkStores<ApplicationContext>().AddDefaultTokenProviders();
 //add cache service
 builder.Services.AddResponseCaching();
 // Add log configure.

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json.Serialization;
 using Villa.Services;
@@ -10,51 +11,70 @@ namespace Web.Services
     public class BaseService : IBaseService
     {
         public APIResponse ResponseModel { get; set; }
-        public IHttpClientFactory _httpClientFactory { get; set; }
-        public BaseService(IHttpClientFactory httpClientFactory)
+        public IHttpClientFactory _httpClient { get; set; }
+        public BaseService(IHttpClientFactory httpClient)
         {
-            this.ResponseModel = new();
-            _httpClientFactory = httpClientFactory;
+            ResponseModel = new();
+            _httpClient = httpClient;
         }
         public async Task<T> SendAsync<T>(APIRequest apiRequest)
         {
             try
             {
-                var client = _httpClientFactory.CreateClient("WebVilla");
-                HttpRequestMessage httpRequestMessage = new HttpRequestMessage();
-                httpRequestMessage.Headers.Add("Accept","application/json");
-                httpRequestMessage.RequestUri = new Uri(apiRequest.Url);
-                if(apiRequest.Data is not null)
+                var client = _httpClient.CreateClient("WebVilla");
+                HttpRequestMessage message = new HttpRequestMessage();
+                message.Headers.Add("Accept", "application/json");
+                message.RequestUri = new Uri(apiRequest.Url);
+                if (apiRequest.Data is not null)
                 {
-                    httpRequestMessage.Content = new StringContent(JsonConvert.SerializeObject(apiRequest.Data),
-                        Encoding.UTF8, "application/json");
+                    message.Content = new StringContent(JsonConvert.SerializeObject(apiRequest.Data),
+                         Encoding.UTF8, "application/json");
 
                 }
                 switch (apiRequest.ApiType)
                 {
                     case SD.ApiType.POST:
-                        httpRequestMessage.Method = HttpMethod.Post;
+                        message.Method = HttpMethod.Post;
                         break;
                     case SD.ApiType.PUT:
-                        httpRequestMessage.Method = HttpMethod.Put;
+                        message.Method = HttpMethod.Put;
                         break;
                     case SD.ApiType.DELETE:
-                        httpRequestMessage.Method = HttpMethod.Delete;
+                        message.Method = HttpMethod.Delete;
                         break;
                     default:
-                        httpRequestMessage.Method = HttpMethod.Get;
+                        message.Method = HttpMethod.Get;
                         break;
+
                 }
 
-                HttpResponseMessage httpResponseMessage =null;
-                httpResponseMessage = await client.SendAsync(httpRequestMessage);
+                HttpResponseMessage apiResponse = null;
+                apiResponse = await client.SendAsync(message);
 
-                var apiContent=await httpResponseMessage.Content.ReadAsStringAsync();
+                var apiContent = await apiResponse.Content.ReadAsStringAsync();
+                try
+                {
+                    APIResponse ApiResponse = JsonConvert.DeserializeObject<APIResponse>(apiContent);
+                    if (ApiResponse != null && (apiResponse.StatusCode == System.Net.HttpStatusCode.BadRequest
+                        || apiResponse.StatusCode == System.Net.HttpStatusCode.NotFound))
+                    {
+                        ApiResponse.StatusCode = (int)System.Net.HttpStatusCode.BadRequest;
+                        ApiResponse.IsSuccess = false;
+                        var res = JsonConvert.SerializeObject(ApiResponse);
+                        var returnObj = JsonConvert.DeserializeObject<T>(res);
+                        return returnObj;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var exceptionResponse = JsonConvert.DeserializeObject<T>(apiContent);
+                    return exceptionResponse;
+                }
+                var APIResponse = JsonConvert.DeserializeObject<T>(apiContent);
+                return APIResponse;
 
-                var apiResponse = JsonConvert.DeserializeObject<T>(apiContent);
-                return apiResponse;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 var dto = new APIResponse
                 {
@@ -62,9 +82,10 @@ namespace Web.Services
                     IsSuccess = false
                 };
                 var res = JsonConvert.SerializeObject(dto);
-                var response = JsonConvert.DeserializeObject<T>(res);
-                return response;
-            }
+                var APIResponse = JsonConvert.DeserializeObject<T>(res);
+                return APIResponse;
+            } 
+        
         }
 
     }

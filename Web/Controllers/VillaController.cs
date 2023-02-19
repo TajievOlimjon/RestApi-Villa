@@ -18,7 +18,7 @@ namespace Web.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            List<GetAllVillaDto> villas = null;
+            List<GetAllVillaDto> villas = new();
             var response = await _villaService.GetAllAsync<APIResponse>();
             if(response is not null && response.IsSuccess)
             {

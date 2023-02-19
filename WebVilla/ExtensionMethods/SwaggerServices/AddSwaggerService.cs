@@ -35,8 +35,8 @@ namespace WebVilla.ExtensionMethods.SwaggerServices
                 });
                 options.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    Version = "v1",
-                    Title="Villa",
+                    Version = "v1.0",
+                    Title="Web Villa",
                     Description="Api to manage Villa v1",
                     TermsOfService=new Uri("https://example.com/terms"),
                     Contact=new OpenApiContact
@@ -52,8 +52,8 @@ namespace WebVilla.ExtensionMethods.SwaggerServices
                 });
                 options.SwaggerDoc("v2", new OpenApiInfo
                 {
-                    Version = "v2",
-                    Title = "Villa",
+                    Version = "v2.0",
+                    Title = "Web Villa",
                     Description = "Api to manage Villa v2",
                     TermsOfService = new Uri("https://example.com/terms"),
                     Contact = new OpenApiContact
