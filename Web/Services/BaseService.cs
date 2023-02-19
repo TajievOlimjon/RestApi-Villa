@@ -50,6 +50,7 @@ namespace Web.Services
                 httpResponseMessage = await client.SendAsync(httpRequestMessage);
 
                 var apiContent=await httpResponseMessage.Content.ReadAsStringAsync();
+
                 var apiResponse = JsonConvert.DeserializeObject<T>(apiContent);
                 return apiResponse;
             }

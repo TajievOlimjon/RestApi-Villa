@@ -5,28 +5,29 @@ using WebVilla.AuthModels.AuthDTOs;
 using WebVilla.Repozitories.RepozitoryServices;
 using WebVilla.Responses;
 
-namespace WebVilla.Controllers
+namespace WebVilla.Controllers.v1
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}[controller]")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class UsersController : ControllerBase
     {
         private readonly IUserRepozitory _userRepozitory;
         private APIResponse _apiResponse;
         public UsersController(IUserRepozitory userRepozitory)
         {
-            _userRepozitory=userRepozitory;
-            this._apiResponse = new();
+            _userRepozitory = userRepozitory;
+            _apiResponse = new();
         }
         [HttpPost("Login")]
-        public async Task<IActionResult> Login([FromBody]LoginRequestDto loginRequestDto)
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequestDto)
         {
             var response = await _userRepozitory.Login(loginRequestDto);
-            if(response.User is null || string.IsNullOrEmpty(response.Token))
+            if (response.User is null || string.IsNullOrEmpty(response.Token))
             {
-                _apiResponse.StatusCode =(int)HttpStatusCode.BadRequest;
+                _apiResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                 _apiResponse.IsSuccess = false;
-                _apiResponse.ErrorMessages = new List<string>{"UserName or password  is incorrect !" };
+                _apiResponse.ErrorMessages = new List<string> { "UserName or password  is incorrect !" };
                 return BadRequest(_apiResponse);
             }
             _apiResponse.StatusCode = (int)HttpStatusCode.OK;
@@ -36,10 +37,10 @@ namespace WebVilla.Controllers
 
         }
         [HttpPost("Register")]
-        public async Task<IActionResult> Register([FromBody]RegistrationRequestDto registrationRequestDto)
+        public async Task<IActionResult> Register([FromBody] RegistrationRequestDto registrationRequestDto)
         {
             var response = await _userRepozitory.IsUniqueUser(registrationRequestDto.UserName);
-            if(response is false)
+            if (response is false)
             {
                 _apiResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                 _apiResponse.IsSuccess = false;

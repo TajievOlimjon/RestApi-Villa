@@ -1,16 +1,18 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using WebVilla.AuthModels;
 using WebVilla.Models;
 
 namespace WebVilla.Data
 {
-    public class ApplicationContext:DbContext
+    public class ApplicationContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationContext(DbContextOptions<ApplicationContext> options)
             : base(options)
         {
 
         }
+        public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<Villa> Villas { get; set; }
         public DbSet<VillaNumber> VillaNumbers { get; set; }
         public DbSet<User> Users  { get; set; }

@@ -17,11 +17,11 @@ namespace WebVilla.Repozitories.RepozitoryServices
         public UserRepozitory(ApplicationContext context,IConfiguration configuration)
         {
             _context = context;
-            secretKey = configuration.GetValue<string>("SecretKey:Key");
+            secretKey = configuration.GetSection("SecretKey:Key").Value;
         }
         public async Task<bool> IsUniqueUser(string userName)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x=>x.UserName.Equals(userName));
+            var user = await _context.Users.FirstOrDefaultAsync(x=>x.UserName.ToLower().Equals(userName.ToLower()));
             if(user is null)
             {
                 return true;
@@ -37,17 +37,18 @@ namespace WebVilla.Repozitories.RepozitoryServices
                 return new LoginResponseDto
                 {
                     User = null,
-                    Token = ""
+                    Token = "Not token"
                 };
             }
             var jwtTokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(secretKey);
+            var key = Encoding.UTF8.GetBytes(secretKey);
 
             var tokenDescriptor = new SecurityTokenDescriptor()
             {
                 Subject=new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name,user.Id.ToString()),
+                    new Claim(ClaimTypes.NameIdentifier,user.Id.ToString()),
+                    new Claim(ClaimTypes.Name,user.UserName),
                     new Claim(ClaimTypes.Role,user.Role)
                 }),
                 Expires=DateTime.UtcNow.AddDays(1),

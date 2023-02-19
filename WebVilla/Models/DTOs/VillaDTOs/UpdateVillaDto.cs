@@ -13,5 +13,6 @@ namespace WebVilla.Models.DTOs.VillaDTOs
         public int Occupancy { get; set; }
         public string ImageUrl { get; set; }
         public string Amenity { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
     }
 }
